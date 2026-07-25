@@ -580,7 +580,6 @@ function closeVideoTakeover(){
   videoTakeover.classList.add('closing');
   setTimeout(() => {
     videoTakeover.classList.remove('closing');
-    videoTakeover.style.display = 'none';
   }, 620);
 }
 videoTakeover.onclick = closeVideoTakeover;
