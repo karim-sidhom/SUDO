@@ -525,22 +525,20 @@ const vtVideo = document.getElementById('vtVideo');
 const vtTitle = document.getElementById('vtTitle');
 
 let currentIndex = 0;
-let isShuffled = false;
-let order = PLAYLIST.map((_, i) => i);
+let playHistory = []; // pile des pistes précédemment jouées, pour le bouton "précédent"
+
+function randomIndexExcluding(exclude){
+  if(PLAYLIST.length <= 1) return 0;
+  let idx;
+  do{ idx = Math.floor(Math.random() * PLAYLIST.length); } while(idx === exclude);
+  return idx;
+}
 
 function fmt(s){
   if(!isFinite(s)) return "0:00";
   const m = Math.floor(s/60);
   const sec = Math.floor(s%60).toString().padStart(2,'0');
   return `${m}:${sec}`;
-}
-
-function shuffleOrder(){
-  order = PLAYLIST.map((_, i) => i);
-  for(let i = order.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i+1));
-    [order[i], order[j]] = [order[j], order[i]];
-  }
 }
 
 function renderGrid(){
@@ -600,14 +598,15 @@ function loadTrack(index, autoplay){
 }
 
 function playNext(){
-  const pos = order.indexOf(currentIndex);
-  const nextPos = (pos + 1) % order.length;
-  loadTrack(order[nextPos], true);
+  playHistory.push(currentIndex);
+  loadTrack(randomIndexExcluding(currentIndex), true);
 }
 function playPrev(){
-  const pos = order.indexOf(currentIndex);
-  const prevPos = (pos - 1 + order.length) % order.length;
-  loadTrack(order[prevPos], true);
+  if(playHistory.length){
+    loadTrack(playHistory.pop(), true);
+  } else {
+    loadTrack(randomIndexExcluding(currentIndex), true);
+  }
 }
 
 playBtn.onclick = () => {
@@ -621,10 +620,12 @@ player.onended = () => { closeVideoTakeover(); playNext(); };
 nextBtn.onclick = playNext;
 prevBtn.onclick = playPrev;
 
+// la lecture est toujours aléatoire — plus de mode "successif"
+shuffleBtn.style.background = 'rgba(255,215,0,0.35)';
+shuffleBtn.title = 'قراءة عشوائية دائمة';
 shuffleBtn.onclick = () => {
-  isShuffled = !isShuffled;
-  shuffleBtn.style.background = isShuffled ? 'rgba(255,215,0,0.35)' : 'rgba(255,215,0,0.08)';
-  if(isShuffled){ shuffleOrder(); } else { order = PLAYLIST.map((_, i) => i); }
+  shuffleBtn.style.transform = 'scale(0.9)';
+  setTimeout(() => { shuffleBtn.style.transform = ''; }, 150);
 };
 
 player.ontimeupdate = () => {
@@ -646,7 +647,7 @@ player.volume = 0.8;
 
 tapStart.onclick = () => {
   tapOverlay.style.display = 'none';
-  loadTrack(0, true);
+  loadTrack(randomIndexExcluding(-1), true);
 };
 
 // init avant premier lancement
