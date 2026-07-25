@@ -417,7 +417,7 @@ input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; he
 
     <div class="video-takeover" id="videoTakeover">
       <video id="vtVideo" muted loop playsinline>
-        <source src="dazn.mp4" type="video/mp4">
+        <source src="vinyle-live.mp4" type="video/mp4">
       </video>
       <div class="vt-content">
         <div class="vt-label">يُذاع الآن</div>
@@ -615,7 +615,7 @@ playBtn.onclick = () => {
 
 player.onplay = () => { playBtn.textContent = '⏸'; setSpinning(true); renderGrid(); openVideoTakeover(); };
 player.onpause = () => { playBtn.textContent = '▶'; setSpinning(false); renderGrid(); };
-player.onended = () => { playNext(); };
+player.onended = () => { closeVideoTakeover(); playNext(); };
 
 nextBtn.onclick = playNext;
 prevBtn.onclick = playPrev;
