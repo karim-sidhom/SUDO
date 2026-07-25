@@ -324,6 +324,42 @@ input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; he
 }
 
 .footer-note{ text-align:center; font-size:11px; color:rgba(255,255,255,0.35); margin-top:16px; }
+
+/* ===== BALADEUR — couvercle vidéo qui se ferme sur la lecture + vinyles ===== */
+.lower-section{ position:relative; perspective:1200px; }
+.video-takeover{
+  position:absolute; inset:0; z-index:20;
+  display:none; flex-direction:column; align-items:center; justify-content:center;
+  border-radius:16px; overflow:hidden; cursor:pointer;
+  transform-origin:top center;
+  box-shadow:0 10px 40px rgba(0,0,0,0.65), inset 0 0 0 1px rgba(255,215,0,0.4);
+}
+.video-takeover video{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  filter:brightness(0.6) saturate(1.15);
+}
+.video-takeover::before{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.6) 100%);
+}
+.vt-content{ position:relative; z-index:1; text-align:center; padding:20px; }
+.vt-label{ font-size:11px; letter-spacing:2px; color:var(--gold3); opacity:.85; }
+.vt-title{ font-size:20px; font-weight:900; color:#fff; margin-top:8px; text-shadow:0 0 14px rgba(0,0,0,0.85); }
+.vt-hint{ font-size:12px; color:rgba(255,255,255,0.65); margin-top:14px; }
+
+.video-takeover.opening{ display:flex; animation:doorClose .65s cubic-bezier(.2,.9,.25,1) forwards; }
+.video-takeover.closing{ display:flex; animation:doorEject .6s cubic-bezier(.55,0,.85,.35) forwards; }
+
+/* le couvercle se referme par le haut, comme la porte d'un baladeur */
+@keyframes doorClose{
+  from{ transform:translateY(-100%) rotateX(75deg); opacity:0; }
+  to{ transform:translateY(0) rotateX(0deg); opacity:1; }
+}
+/* il s'ouvre puis sort/éjecte, comme la cassette d'un vieux baladeur */
+@keyframes doorEject{
+  from{ transform:translateY(0) rotateX(0deg); opacity:1; }
+  to{ transform:translateY(-55%) rotateX(-115deg) scale(.94); opacity:0; }
+}
 </style>
 </head>
 <body>
@@ -377,34 +413,49 @@ input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; he
     </div>
   </div>
 
-  <div class="now-playing">
-    <div class="np-label">يُذاع الآن</div>
-    <div class="np-title" id="npTitle">—</div>
-    <div class="np-index" id="npIndex">—</div>
+  <div class="lower-section" id="lowerSection">
 
-    <div class="progress-wrap" id="progressWrap">
-      <div class="progress-bar" id="progressBar"></div>
+    <div class="video-takeover" id="videoTakeover">
+      <video id="vtVideo" muted loop playsinline>
+        <source src="bg.mp4" type="video/mp4">
+      </video>
+      <div class="vt-content">
+        <div class="vt-label">يُذاع الآن</div>
+        <div class="vt-title" id="vtTitle">—</div>
+        <div class="vt-hint">المس للعودة إلى الاسطوانات</div>
+      </div>
     </div>
-    <div class="times">
-      <span id="curTime">0:00</span>
-      <span id="durTime">0:00</span>
+
+    <div class="now-playing">
+      <div class="np-label">يُذاع الآن</div>
+      <div class="np-title" id="npTitle">—</div>
+      <div class="np-index" id="npIndex">—</div>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="times">
+        <span id="curTime">0:00</span>
+        <span id="durTime">0:00</span>
+      </div>
     </div>
-  </div>
 
-  <div class="controls">
-    <button class="btn btn-sm" id="prevBtn" title="السابق">⏮</button>
-    <button class="btn btn-play" id="playBtn" title="تشغيل/إيقاف">▶</button>
-    <button class="btn btn-sm" id="nextBtn" title="التالي">⏭</button>
-    <button class="btn btn-sm" id="shuffleBtn" title="عشوائي">🔀</button>
-  </div>
+    <div class="controls">
+      <button class="btn btn-sm" id="prevBtn" title="السابق">⏮</button>
+      <button class="btn btn-play" id="playBtn" title="تشغيل/إيقاف">▶</button>
+      <button class="btn btn-sm" id="nextBtn" title="التالي">⏭</button>
+      <button class="btn btn-sm" id="shuffleBtn" title="عشوائي">🔀</button>
+    </div>
 
-  <div class="vol-row">
-    <span>🔊</span>
-    <input type="range" id="volSlider" min="0" max="100" value="80">
-  </div>
+    <div class="vol-row">
+      <span>🔊</span>
+      <input type="range" id="volSlider" min="0" max="100" value="80">
+    </div>
 
-  <div class="shelf-label">رفّ الاسطوانات — المس واحدة لتدور</div>
-  <div class="vinyl-grid" id="vinylGrid"></div>
+    <div class="shelf-label">رفّ الاسطوانات — المس واحدة لتدور</div>
+    <div class="vinyl-grid" id="vinylGrid"></div>
+
+  </div>
 
   <div class="shimmer"></div>
   <div class="footer-note">راديو SUDO — يبث بلا توقف، 24 ساعة على 24 · kieda.online</div>
@@ -468,6 +519,9 @@ const tapStart = document.getElementById('tapStart');
 const platter = document.getElementById('platter');
 const platterLabel = document.getElementById('platterLabel');
 const tonearm = document.getElementById('tonearm');
+const videoTakeover = document.getElementById('videoTakeover');
+const vtVideo = document.getElementById('vtVideo');
+const vtTitle = document.getElementById('vtTitle');
 
 let currentIndex = 0;
 let isShuffled = false;
@@ -510,6 +564,27 @@ function setSpinning(spinning){
   tonearm.classList.toggle('playing', spinning);
 }
 
+let vtOpen = false;
+function openVideoTakeover(){
+  if(vtOpen) return;
+  vtOpen = true;
+  videoTakeover.classList.remove('closing');
+  videoTakeover.classList.add('opening');
+  vtVideo.currentTime = 0;
+  vtVideo.play().catch(()=>{});
+}
+function closeVideoTakeover(){
+  if(!vtOpen) return;
+  vtOpen = false;
+  videoTakeover.classList.remove('opening');
+  videoTakeover.classList.add('closing');
+  setTimeout(() => {
+    videoTakeover.classList.remove('closing');
+    videoTakeover.style.display = 'none';
+  }, 620);
+}
+videoTakeover.onclick = closeVideoTakeover;
+
 function loadTrack(index, autoplay){
   currentIndex = index;
   const t = PLAYLIST[index];
@@ -517,6 +592,7 @@ function loadTrack(index, autoplay){
   npTitle.textContent = `${t.title} — ${t.sub}`;
   npIndex.textContent = `المقطع ${index+1} من ${PLAYLIST.length}`;
   platterLabel.textContent = t.title;
+  vtTitle.textContent = `${t.title} — ${t.sub}`;
   renderGrid();
   if(autoplay){
     player.play().catch(()=>{});
@@ -538,7 +614,7 @@ playBtn.onclick = () => {
   if(player.paused){ player.play(); } else { player.pause(); }
 };
 
-player.onplay = () => { playBtn.textContent = '⏸'; setSpinning(true); renderGrid(); };
+player.onplay = () => { playBtn.textContent = '⏸'; setSpinning(true); renderGrid(); openVideoTakeover(); };
 player.onpause = () => { playBtn.textContent = '▶'; setSpinning(false); renderGrid(); };
 player.onended = () => { playNext(); };
 
