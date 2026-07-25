@@ -1,0 +1,46 @@
+name: Mise à jour automatique de la playlist audio
+
+on:
+  push:
+    paths:
+      - 'audio/**.mp3'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v4
+
+      - name: Générer audio/manifest.json à partir des fichiers présents
+        run: |
+          mkdir -p audio
+          {
+            echo "["
+            first=true
+            for f in audio/*.mp3; do
+              [ -e "$f" ] || continue
+              name=$(basename "$f")
+              if [ "$first" = true ]; then first=false; else echo ","; fi
+              printf '  "%s"' "$name"
+            done
+            echo ""
+            echo "]"
+          } > audio/manifest.json
+          cat audio/manifest.json
+
+      - name: Commit et push si le manifeste a changé
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add audio/manifest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "🔄 Mise à jour automatique de la playlist (audio/manifest.json)"
+            git push
+          else
+            echo "Aucun changement à commit."
+          fi
