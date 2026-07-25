@@ -414,37 +414,41 @@ input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; he
 
 <script>
 // ==== قائمة البث — راديو SUDO ====
-// ✳️ تحميل أوتوماتيكي: أي mp3 تحطو في مجلد audio/ في الـ repo يبان وحدو هنا.
-// ما فماش داعي تكتب اسمو يدويا — العنوان يتجبد من اسم الملف.
-
-// ✳️ لا حاجة لأي إعداد: ملف audio/manifest.json يتولّد أوتوماتيكيا
-// بواسطة GitHub Action كل مرة تزيد أو تحذف mp3 من مجلد audio/
-const AUDIO_FOLDER = "audio";
-
-let PLAYLIST = [];
-
-function titleFromFilename(filename){
-  const noExt = filename.replace(/\.mp3$/i, '');
-  return noExt.replace(/[-_]+/g, ' ').trim();
-}
-
-async function loadPlaylistFromRepo(){
-  try{
-    const res = await fetch(`${AUDIO_FOLDER}/manifest.json?v=${Date.now()}`);
-    if(!res.ok) throw new Error('manifest.json introuvable: ' + res.status);
-    const files = await res.json();
-    PLAYLIST = files
-      .filter(name => /\.mp3$/i.test(name))
-      .sort((a, b) => a.localeCompare(b, 'ar'))
-      .map(name => {
-        const title = titleFromFilename(name);
-        return { title, sub: title, src: `${AUDIO_FOLDER}/${name}` };
-      });
-  }catch(e){
-    console.error('تعذّر تحميل manifest.json:', e);
-    PLAYLIST = [];
-  }
-}
+const PLAYLIST = [
+  { title: "أبطال يوم بيوم", sub:"Héros du Quotidien", src: "audio/heros-du-quotidien-1.mp3" },
+  { title: "أبطال يوم بيوم (2)", sub:"Héros du Quotidien", src: "audio/heros-du-quotidien-2.mp3" },
+  { title: "إرث الأحياء", sub:"L'Héritage des Cités", src: "audio/heritage-des-cites-1.mp3" },
+  { title: "إرث الأحياء (2)", sub:"L'Héritage des Cités", src: "audio/heritage-des-cites-2.mp3" },
+  { title: "الجمهورية، مش وحدة", sub:"La République, pas une", src: "audio/la-republique-pas-une-1.mp3" },
+  { title: "الجمهورية، مش وحدة (2)", sub:"La République, pas une", src: "audio/la-republique-pas-une-2.mp3" },
+  { title: "الشوريكن ما يخطاش", sub:"Le Shuriken Ne Manque Jamais", src: "audio/le-shuriken-ne-manque-jamais-1.mp3" },
+  { title: "الشوريكن ما يخطاش (2)", sub:"Le Shuriken Ne Manque Jamais", src: "audio/le-shuriken-ne-manque-jamais-2.mp3" },
+  { title: "أثقل من السلاسل", sub:"Plus lourds que des chaînes", src: "audio/plus-lourds-que-des-chaines-1.mp3" },
+  { title: "أثقل من السلاسل (2)", sub:"Plus lourds que des chaînes", src: "audio/plus-lourds-que-des-chaines-2.mp3" },
+  { title: "احترم الأسامي", sub:"Respecte les prénoms", src: "audio/respecte-les-prenoms-1.mp3" },
+  { title: "احترم الأسامي (2)", sub:"Respecte les prénoms", src: "audio/respecte-les-prenoms-2.mp3" },
+  { title: "قبانية فوق القضبان", sub:"Kobbanya sur les rails", src: "audio/kobbanya-sur-les-rails-1.mp3" },
+  { title: "قبانية فوق القضبان (2)", sub:"Kobbanya sur les rails", src: "audio/kobbanya-sur-les-rails-2.mp3" },
+  { title: "قبانية فوق القضبان (3)", sub:"Kobbanya sur les rails", src: "audio/kobbanya-sur-les-rails-3.mp3" },
+  { title: "احمي راسك", sub:"Protège ta tête", src: "audio/protege-ta-tete-1.mp3" },
+  { title: "احمي راسك (2)", sub:"Protège ta tête", src: "audio/protege-ta-tete-2.mp3" },
+  { title: "نفس الدم، نفس النضال", sub:"Même Sang, Même Combat", src: "audio/meme-sang-meme-combat-1.mp3" },
+  { title: "نفس الدم، نفس النضال (2)", sub:"Même Sang, Même Combat", src: "audio/meme-sang-meme-combat-2.mp3" },
+  { title: "دم بندالة", sub:"Le Sang de Bandala", src: "audio/le-sang-de-bandala-1.mp3" },
+  { title: "دم بندالة (2)", sub:"Le Sang de Bandala", src: "audio/le-sang-de-bandala-2.mp3" },
+  { title: "بيريه أزرق", sub:"Béret Bleu", src: "audio/beret-bleu-1.mp3" },
+  { title: "بيريه أزرق (2)", sub:"Béret Bleu", src: "audio/beret-bleu-2.mp3" },
+  { title: "دم نديم", sub:"Le Sang de Nadim", src: "audio/le-sang-de-nadim-1.mp3" },
+  { title: "دم نديم (2)", sub:"Le Sang de Nadim", src: "audio/le-sang-de-nadim-2.mp3" },
+  { title: "من أجل ابن عم زياد", sub:"Pour le Cousin de Zyed", src: "audio/pour-le-cousin-de-zyed-1.mp3" },
+  { title: "من أجل ابن عم زياد (2)", sub:"Pour le Cousin de Zyed", src: "audio/pour-le-cousin-de-zyed-2.mp3" },
+  { title: "العودة للبلاد", sub:"Rentrée au Bled", src: "audio/rentree-au-bled-1.mp3" },
+  { title: "العودة للبلاد (2)", sub:"Rentrée au Bled", src: "audio/rentree-au-bled-2.mp3" },
+  { title: "سودو دائما واقف", sub:"Sudo Toujours Debout", src: "audio/sudo-toujours-debout-1.mp3" },
+  { title: "سودو دائما واقف (2)", sub:"Sudo Toujours Debout", src: "audio/sudo-toujours-debout-2.mp3" },
+  { title: "سودو ضد نيرو", sub:"Sudo vs Nirou", src: "audio/sudo-vs-nirou-1.mp3" },
+  { title: "سودو ضد نيرو (2)", sub:"Sudo vs Nirou", src: "audio/sudo-vs-nirou-2.mp3" },
+];
 
 const player = document.getElementById('player');
 const playBtn = document.getElementById('playBtn');
@@ -467,7 +471,7 @@ const tonearm = document.getElementById('tonearm');
 
 let currentIndex = 0;
 let isShuffled = false;
-let order = [];
+let order = PLAYLIST.map((_, i) => i);
 
 function fmt(s){
   if(!isFinite(s)) return "0:00";
@@ -566,24 +570,14 @@ player.volume = 0.8;
 
 tapStart.onclick = () => {
   tapOverlay.style.display = 'none';
-  if(PLAYLIST.length) loadTrack(0, true);
+  loadTrack(0, true);
 };
 
-// init: نستنّاو تحميل قائمة الأغاني من GitHub قبل ما نعمّرو الواجهة
-async function initApp(){
-  await loadPlaylistFromRepo();
-  order = PLAYLIST.map((_, i) => i);
-  renderGrid();
-  if(PLAYLIST.length){
-    npTitle.textContent = `${PLAYLIST[0].title} — ${PLAYLIST[0].sub}`;
-    npIndex.textContent = `المقطع 1 من ${PLAYLIST.length}`;
-    platterLabel.textContent = PLAYLIST[0].title;
-  } else {
-    npTitle.textContent = 'ما فماش أغاني توا — زيد mp3 في مجلد audio';
-    npIndex.textContent = '';
-  }
-}
-initApp();
+// init avant premier lancement
+renderGrid();
+npTitle.textContent = `${PLAYLIST[0].title} — ${PLAYLIST[0].sub}`;
+npIndex.textContent = `المقطع 1 من ${PLAYLIST.length}`;
+platterLabel.textContent = PLAYLIST[0].title;
 
 // ==== أوقات الصلاة ====
 const PRAYER_ORDER = [
