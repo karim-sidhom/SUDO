@@ -740,7 +740,9 @@ setInterval(renderPrayers, 60 * 1000);
 // ==== تسجيل Service Worker (PWA) ====
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('SUDO PWA: service worker enregistré ✓'))
+      .catch((err) => console.error('SUDO PWA: échec service worker →', err));
   });
 }
 
