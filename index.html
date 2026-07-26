@@ -281,6 +281,16 @@ input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; he
 .vinyl-grid::-webkit-scrollbar-thumb{ background:rgba(255,215,0,0.4); border-radius:5px; }
 
 .vinyl-mini{ display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
+.vinyl-share{
+  position:absolute; bottom:-2px; left:-2px;
+  width:20px; height:20px; border-radius:50%;
+  background:rgba(2,11,46,0.85); border:1px solid rgba(255,215,0,0.5);
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; z-index:4; cursor:pointer;
+  transition:transform .2s ease, background .2s ease;
+}
+.vinyl-share:hover{ background:rgba(255,215,0,0.25); }
+.vinyl-share:active{ transform:scale(0.88); }
 .vinyl-disc{
   width:78px; height:78px; border-radius:50%;
   background:
@@ -461,6 +471,7 @@ input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; he
       <button class="btn btn-play" id="playBtn" title="تشغيل/إيقاف">▶</button>
       <button class="btn btn-sm" id="nextBtn" title="التالي">⏭</button>
       <button class="btn btn-sm" id="shuffleBtn" title="عشوائي">🔀</button>
+      <button class="btn btn-sm" id="shareBtn" title="نسخ رابط هذا المقطع">🔗</button>
     </div>
 
     <div class="vol-row">
@@ -532,6 +543,16 @@ const PLAYLIST = [
   { title: "جامعة الشارع (3)", sub:"L'Université de la Rue", src: "audio/L'Université de la Rue (3).mp3" },
   { title: "بلا عنوان (2)", sub:"Sans Titre", src: "audio/Sans Titre (2).mp3" },
   { title: "بلا عنوان (3)", sub:"Sans Titre", src: "audio/Sans Titre (3).mp3" },
+  { title: "93 في الدم", sub:"93 Dans Le Sang", src: "audio/93 Dans Le Sang.mp3" },
+  { title: "93 في الدم (2)", sub:"93 Dans Le Sang", src: "audio/93 Dans Le Sang (1).mp3" },
+  { title: "القط جندي", sub:"Un chat, c'est un soldat", src: "audio/Un chat, c'est un soldat.mp3" },
+  { title: "القط جندي (2)", sub:"Un chat, c'est un soldat", src: "audio/Un chat, c'est un soldat (1).mp3" },
+  { title: "غابة الباطون", sub:"Jungle de béton", src: "audio/Jungle de béton.mp3" },
+  { title: "غابة الباطون (2)", sub:"Jungle de béton", src: "audio/Jungle de béton (1).mp3" },
+  { title: "المعلّم الكبير", sub:"Le Grand Maître", src: "audio/Le Grand Maître.mp3" },
+  { title: "المعلّم الكبير (2)", sub:"Le Grand Maître", src: "audio/Le Grand Maître (1).mp3" },
+  { title: "قابي خويا", sub:"Gabi C'est Mon Frère", src: "audio/Gabi C'est Mon Frère.mp3" },
+  { title: "قابي خويا (2)", sub:"Gabi C'est Mon Frère", src: "audio/Gabi C'est Mon Frère (1).mp3" },
 ];
 
 const player = document.getElementById('player');
@@ -539,6 +560,7 @@ const playBtn = document.getElementById('playBtn');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 const shuffleBtn = document.getElementById('shuffleBtn');
+const shareBtn = document.getElementById('shareBtn');
 const npTitle = document.getElementById('npTitle');
 const npIndex = document.getElementById('npIndex');
 const progressBar = document.getElementById('progressBar');
@@ -558,6 +580,42 @@ const vtTitle = document.getElementById('vtTitle');
 
 let currentIndex = 0;
 let playHistory = []; // pile des pistes précédemment jouées, pour le bouton "précédent"
+
+// ==== روابط مباشرة لمقطع محدد (partage d'un lien vers une chanson précise) ====
+function slugify(s){
+  return s.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+const TRACK_SLUGS = PLAYLIST.map(t => slugify(t.sub) || 'piste');
+
+function getDeepLinkIndex(){
+  const params = new URLSearchParams(location.search);
+  const slug = params.get('t');
+  if(slug){
+    const idx = TRACK_SLUGS.indexOf(slug);
+    if(idx !== -1) return idx;
+  }
+  return null;
+}
+const deepLinkIndex = getDeepLinkIndex();
+
+function buildShareLink(index){
+  const url = new URL(location.href);
+  url.search = '';
+  url.searchParams.set('t', TRACK_SLUGS[index]);
+  return url.toString();
+}
+
+async function copyTrackLink(index){
+  const link = buildShareLink(index);
+  try{
+    await navigator.clipboard.writeText(link);
+    return true;
+  }catch(e){
+    window.prompt('انسخ الرابط يدويًا:', link);
+    return false;
+  }
+}
 
 function randomIndexExcluding(exclude){
   if(PLAYLIST.length <= 1) return 0;
@@ -582,10 +640,18 @@ function renderGrid(){
       <div style="position:relative;">
         <div class="vinyl-num">${i+1}</div>
         <div class="vinyl-disc${i === currentIndex && !player.paused ? ' spinning' : ''}"></div>
+        <div class="vinyl-share" title="نسخ رابط هذا المقطع">🔗</div>
       </div>
       <div class="vinyl-name">${t.title}</div>
     `;
     wrap.onclick = () => { loadTrack(i, true); };
+    const shareIcon = wrap.querySelector('.vinyl-share');
+    shareIcon.onclick = async (e) => {
+      e.stopPropagation();
+      const ok = await copyTrackLink(i);
+      shareIcon.textContent = ok ? '✅' : '🔗';
+      if(ok) setTimeout(() => { shareIcon.textContent = '🔗'; }, 1400);
+    };
     vinylGrid.appendChild(wrap);
   });
 }
@@ -624,6 +690,11 @@ function loadTrack(index, autoplay){
   platterLabel.textContent = 'SUDO';
   vtTitle.textContent = `${t.title} — ${t.sub}`;
   renderGrid();
+  try{
+    const url = new URL(location.href);
+    url.searchParams.set('t', TRACK_SLUGS[index]);
+    history.replaceState(null, '', url.toString());
+  }catch(e){}
   if(autoplay){
     player.play().catch(()=>{});
   }
@@ -679,7 +750,14 @@ player.volume = 0.8;
 
 tapStart.onclick = () => {
   tapOverlay.style.display = 'none';
-  loadTrack(randomIndexExcluding(-1), true);
+  const startIndex = deepLinkIndex !== null ? deepLinkIndex : randomIndexExcluding(-1);
+  loadTrack(startIndex, true);
+};
+
+shareBtn.onclick = async () => {
+  const ok = await copyTrackLink(currentIndex);
+  shareBtn.textContent = ok ? '✅' : '🔗';
+  if(ok) setTimeout(() => { shareBtn.textContent = '🔗'; }, 1400);
 };
 
 // init avant premier lancement
