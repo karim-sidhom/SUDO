@@ -55,6 +55,26 @@ body{
   filter:brightness(0.55) saturate(1.1);
 }
 
+#bgPhotos{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:-3;
+  display:none;
+}
+#bgPhotos img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter:brightness(0.55) saturate(1.1);
+  opacity:0;
+  transition:opacity 1.2s ease;
+}
+#bgPhotos img.active{ opacity:1; }
+
 body::before{
   content:"";
   position:fixed;
@@ -390,6 +410,7 @@ input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; he
 <video id="bgVideo" autoplay muted loop playsinline>
   <source src="bg.mp4" type="video/mp4">
 </video>
+<div id="bgPhotos"></div>
 
 <div class="tap-overlay" id="tapOverlay">
   <div class="logo2">راديو SUDO</div>
@@ -854,6 +875,71 @@ function initPrayerTimes(){
 
 initPrayerTimes();
 setInterval(renderPrayers, 60 * 1000);
+
+// ==== تناوب الفيديو الخلفي مع سلايدشو الصور ====
+// عوّض هذي القائمة بأسماء صورك الحقيقية (نفس مجلد bg.mp4)
+const bgPhotoList = [
+  'photos/1.jpg',
+  'photos/2.jpg',
+  'photos/3.jpg',
+  'photos/4.jpg'
+];
+
+const BG_VIDEO_DURATION = 3 * 60 * 1000; // 3 دقايق فيديو
+const BG_PHOTO_EACH_DURATION = 5000;     // 5 ثواني لكل صورة
+
+const bgVideoEl = document.getElementById('bgVideo');
+const bgPhotosEl = document.getElementById('bgPhotos');
+let bgPhotoImgs = [];
+
+function buildBgPhotos(){
+  bgPhotosEl.innerHTML = '';
+  bgPhotoImgs = bgPhotoList.map((src, i) => {
+    const img = document.createElement('img');
+    img.src = src;
+    if (i === 0) img.classList.add('active');
+    bgPhotosEl.appendChild(img);
+    return img;
+  });
+}
+buildBgPhotos();
+
+function startBgVideoPhase(){
+  bgPhotosEl.style.display = 'none';
+  bgVideoEl.style.display = '';
+  bgVideoEl.currentTime = 0;
+  bgVideoEl.play().catch(()=>{});
+  setTimeout(startBgPhotosPhase, BG_VIDEO_DURATION);
+}
+
+function startBgPhotosPhase(){
+  if (bgPhotoImgs.length === 0){
+    // مفماش صور مضافة، نبقاو فالفيديو
+    setTimeout(startBgVideoPhase, 0);
+    return;
+  }
+  bgVideoEl.pause();
+  bgVideoEl.style.display = 'none';
+  bgPhotosEl.style.display = 'block';
+
+  let idx = 0;
+  bgPhotoImgs.forEach(im => im.classList.remove('active'));
+  bgPhotoImgs[0].classList.add('active');
+
+  const cycleInterval = setInterval(() => {
+    bgPhotoImgs[idx].classList.remove('active');
+    idx = (idx + 1) % bgPhotoImgs.length;
+    bgPhotoImgs[idx].classList.add('active');
+  }, BG_PHOTO_EACH_DURATION);
+
+  const totalPhotoDuration = BG_PHOTO_EACH_DURATION * bgPhotoImgs.length;
+  setTimeout(() => {
+    clearInterval(cycleInterval);
+    startBgVideoPhase();
+  }, totalPhotoDuration);
+}
+
+startBgVideoPhase();
 
 // ==== تسجيل Service Worker (PWA) ====
 if ('serviceWorker' in navigator) {
