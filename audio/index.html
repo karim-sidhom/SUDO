@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>راديو SUDO — بث مباشر 24/24</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#020b2e">
+<meta name="background-color" content="#020b2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="راديو SUDO">
+<link rel="icon" href="icons/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Amiri&display=swap');
+
+:root{
+  --deep:#020b2e;
+  --royal:#0d1a6e;
+  --gold:#ffd700;
+  --gold2:#ffcc00;
+  --gold3:#ffe566;
+  --gold24-dark:#4a3a0d;
+  --gold24-mid:#b8860b;
+  --gold24-bright:#f5cf6b;
+  --gold24-shine:#fff2c2;
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+
+body{
+  min-height:100vh;
+  font-family:'Tajawal',sans-serif;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  overflow-x:hidden;
+  position:relative;
+}
+
+#bgVideo{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:-3;
+  filter:brightness(0.55) saturate(1.1);
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.65) 100%);
+  backdrop-filter:blur(2px);
+  pointer-events:none;
+}
+
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  background:
+    repeating-linear-gradient(45deg, rgba(255,215,0,0.02) 0 2px, transparent 2px 40px);
+  pointer-events:none;
+}
+
+@keyframes spin{ to{ transform:rotate(360deg); } }
+@keyframes fadeUp{ from{opacity:0; transform:translateY(30px);} to{opacity:1; transform:translateY(0);} }
+@keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.25;} }
+
+.card{
+  position:relative;
+  width:100%;
+  max-width:500px;
+  background:linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+  border:1px solid rgba(255,215,0,0.35);
+  border-radius:24px;
+  padding:28px 22px 22px;
+  backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  box-shadow:0 0 60px rgba(255,215,0,0.08), 0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
+  animation:fadeUp 0.9s cubic-bezier(.22,1,.36,1);
+}
+
+.corner{ position:absolute; width:34px; height:34px; border:2px solid var(--gold); opacity:.8; }
+.corner.tl{top:-1px; right:-1px; border-left:none; border-bottom:none; border-radius:24px 0 0 0; animation:spin 12s linear infinite;}
+.corner.tr{top:-1px; left:-1px; border-right:none; border-bottom:none; border-radius:0 24px 0 0; animation:spin 12s linear infinite reverse;}
+.corner.bl{bottom:-1px; right:-1px; border-left:none; border-top:none; border-radius:0 0 0 24px; animation:spin 12s linear infinite reverse;}
+.corner.br{bottom:-1px; left:-1px; border-right:none; border-top:none; border-radius:0 0 24px 0; animation:spin 12s linear infinite;}
+
+.shimmer{
+  height:2px; width:100%;
+  background:linear-gradient(90deg, transparent, var(--gold), var(--gold3), var(--gold), transparent);
+  background-size:200% 100%;
+  animation:shimmer 3s linear infinite;
+  border-radius:2px;
+  margin:14px 0;
+}
+@keyframes shimmer{ from{background-position:200% 0;} to{background-position:-200% 0;} }
+
+.bismillah{ text-align:center; font-family:'Amiri',serif; font-size:22px; color:var(--gold3); text-shadow:0 0 12px rgba(255,215,0,0.4); }
+.verse{ text-align:center; font-family:'Amiri',serif; font-size:14px; color:rgba(255,255,255,0.55); margin-top:4px; line-height:1.7; }
+
+.header{ text-align:center; margin-top:6px; }
+.logo{
+  font-size:34px; font-weight:900; letter-spacing:1px;
+  background:linear-gradient(90deg, var(--gold), var(--gold3), var(--gold2));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  text-shadow:0 0 30px rgba(255,215,0,0.3);
+}
+.tagline{ font-size:13px; color:rgba(255,255,255,0.6); margin-top:2px; }
+
+.live-badge{
+  display:inline-flex; align-items:center; gap:6px;
+  margin:12px auto 0; padding:6px 14px;
+  background:rgba(255,0,60,0.15); border:1px solid rgba(255,60,60,0.5);
+  border-radius:30px; font-size:12px; font-weight:700; color:#ff5c5c;
+  width:fit-content;
+}
+.dot{ width:8px; height:8px; border-radius:50%; background:#ff3b3b; animation:pulse 1.4s ease-in-out infinite; box-shadow:0 0 8px #ff3b3b; }
+
+/* ===== أوقات الصلاة ===== */
+.prayer-card{
+  margin-top:18px;
+  padding:14px;
+  background:rgba(0,0,0,0.28);
+  border:1px solid rgba(255,215,0,0.25);
+  border-radius:16px;
+}
+.prayer-top{
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:11px; color:rgba(255,255,255,0.55);
+  margin-bottom:8px;
+  direction:rtl;
+}
+.hijri-date{ color:var(--gold3); font-family:'Amiri',serif; font-size:13px; }
+.next-prayer-banner{
+  text-align:center;
+  font-size:13px;
+  color:var(--gold3);
+  margin-bottom:10px;
+  min-height:18px;
+}
+.next-prayer-banner b{ color:var(--gold); }
+.prayer-row{
+  display:grid;
+  grid-template-columns:repeat(5, 1fr);
+  gap:6px;
+}
+.prayer-cell{
+  text-align:center;
+  padding:8px 2px;
+  border-radius:10px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid transparent;
+}
+.prayer-cell .p-name{ font-size:11px; color:rgba(255,255,255,0.65); font-family:'Amiri',serif; }
+.prayer-cell .p-time{ font-size:12.5px; font-weight:700; color:#fff; margin-top:3px; direction:ltr; }
+.prayer-cell.next{
+  background:rgba(255,215,0,0.14);
+  border:1px solid rgba(255,215,0,0.5);
+  box-shadow:0 0 14px rgba(255,215,0,0.2);
+}
+.prayer-cell.next .p-name{ color:var(--gold); }
+.prayer-cell.next .p-time{ color:var(--gold3); }
+
+/* ===== TOURNE-DISQUE PRINCIPAL ===== */
+.turntable-zone{ position:relative; display:flex; align-items:center; justify-content:center; margin:24px 0 6px; overflow:hidden; border-radius:20px; }
+.turntable-bg-video{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; opacity:0.55;
+  filter:saturate(1.2) brightness(0.9);
+  z-index:0;
+  pointer-events:none;
+}
+.turntable-wrap{ position:relative; width:190px; height:190px; z-index:1; }
+.platter{
+  width:100%; height:100%; border-radius:50%;
+  background:
+    repeating-radial-gradient(circle at center,
+      var(--gold24-dark) 0px, var(--gold24-dark) 2px,
+      var(--gold24-mid) 3px, var(--gold24-mid) 5px),
+    conic-gradient(from 0deg, var(--gold24-bright), var(--gold24-dark), var(--gold24-mid), var(--gold24-bright));
+  background-blend-mode:overlay;
+  box-shadow:
+    0 0 0 6px rgba(255,215,0,0.35),
+    0 0 45px rgba(255,215,0,0.3),
+    0 14px 40px rgba(0,0,0,0.65),
+    inset 0 0 30px rgba(74,58,13,0.9);
+  position:relative;
+  animation: spin 9s linear infinite;
+  transition: box-shadow .3s ease;
+}
+.platter.spinning{ animation-duration: 2.6s; box-shadow:0 0 0 6px rgba(255,242,194,0.6), 0 0 55px rgba(255,215,0,0.45), 0 14px 40px rgba(0,0,0,0.65), inset 0 0 30px rgba(74,58,13,0.9); }
+.platter-label{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:42%; height:42%; border-radius:50%;
+  background:radial-gradient(circle, var(--gold24-shine) 0%, var(--gold24-mid) 85%);
+  display:flex; align-items:center; justify-content:center;
+  text-align:center; font-size:15px; font-weight:900; line-height:1.3;
+  letter-spacing:1.5px;
+  padding:8px; color:var(--gold24-mid);
+  text-shadow:
+    1px 1px 0 rgba(255,248,210,0.9),
+    -1px -1px 1px rgba(60,40,0,0.85),
+    0 1px 2px rgba(60,40,0,0.6);
+  box-shadow:0 0 18px rgba(255,215,0,0.5);
+}
+.platter-hole{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:10px; height:10px; border-radius:50%;
+  background:var(--deep); border:2px solid var(--gold24-shine);
+  z-index:2;
+}
+.tonearm-pivot{
+  position:absolute; top:-8px; right:-8px;
+  width:24px; height:24px; border-radius:50%;
+  background:linear-gradient(135deg, var(--gold), var(--gold2));
+  box-shadow:0 0 12px rgba(255,215,0,0.6);
+  z-index:4;
+}
+.tonearm-arm{
+  position:absolute; top:2px; right:2px;
+  width:120px; height:6px;
+  background:linear-gradient(90deg, var(--gold2), var(--gold));
+  border-radius:5px;
+  transform-origin:100% 50%;
+  transform:rotate(-38deg);
+  transition:transform .6s cubic-bezier(.34,1.56,.64,1);
+  z-index:3;
+  box-shadow:0 3px 8px rgba(0,0,0,0.5);
+}
+.tonearm-arm::before{
+  content:"";
+  position:absolute; left:-5px; top:-4px;
+  width:14px; height:14px; border-radius:50%;
+  background:var(--deep); border:2px solid var(--gold3);
+}
+.tonearm-arm.playing{ transform:rotate(-10deg); }
+
+.now-playing{ margin-top:18px; text-align:center; padding:14px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,215,0,0.2); border-radius:16px; }
+.np-label{ font-size:11px; letter-spacing:2px; color:var(--gold); opacity:.8; }
+.np-title{ font-size:18px; font-weight:700; margin-top:6px; color:#fff; }
+.np-index{ font-size:12px; color:rgba(255,255,255,0.45); margin-top:2px; }
+
+.progress-wrap{ margin-top:14px; height:6px; background:rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; cursor:pointer; }
+.progress-bar{ height:100%; width:0%; background:linear-gradient(90deg, var(--gold), var(--gold3)); border-radius:10px; transition:width .15s linear; }
+.times{ display:flex; justify-content:space-between; font-size:11px; color:rgba(255,255,255,0.5); margin-top:6px; direction:ltr; }
+
+.controls{ display:flex; align-items:center; justify-content:center; gap:18px; margin-top:20px; }
+.btn{ background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.35); color:var(--gold3); cursor:pointer; transition:all .25s ease; display:flex; align-items:center; justify-content:center; }
+.btn:hover{ background:rgba(255,215,0,0.2); transform:translateY(-2px); }
+.btn-sm{ width:44px; height:44px; border-radius:50%; font-size:16px; }
+.btn-play{ width:66px; height:66px; border-radius:50%; font-size:24px; background:linear-gradient(135deg, var(--gold), var(--gold2)); color:var(--deep); border:none; box-shadow:0 0 30px rgba(255,215,0,0.4); }
+.btn-play:hover{ background:linear-gradient(135deg, var(--gold3), var(--gold)); }
+
+.vol-row{ display:flex; align-items:center; gap:10px; margin-top:18px; padding:0 6px; }
+.vol-row span{ font-size:16px; }
+input[type=range]{ flex:1; -webkit-appearance:none; height:4px; border-radius:4px; background:rgba(255,255,255,0.15); outline:none; }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--gold); box-shadow:0 0 8px rgba(255,215,0,0.6); cursor:pointer; }
+
+/* ===== ÉTAGÈRE DE VINYLES ===== */
+.shelf-label{ margin-top:22px; margin-bottom:12px; font-size:11px; letter-spacing:2px; color:var(--gold); opacity:.8; text-align:center; }
+.vinyl-grid{
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:16px 10px;
+  max-height:320px; overflow-y:auto; padding:4px 2px 6px;
+}
+.vinyl-grid::-webkit-scrollbar{ width:5px; }
+.vinyl-grid::-webkit-scrollbar-thumb{ background:rgba(255,215,0,0.4); border-radius:5px; }
+
+.vinyl-mini{ display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
+.vinyl-share{
+  position:absolute; bottom:-2px; left:-2px;
+  width:20px; height:20px; border-radius:50%;
+  background:rgba(2,11,46,0.85); border:1px solid rgba(255,215,0,0.5);
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; z-index:4; cursor:pointer;
+  transition:transform .2s ease, background .2s ease;
+}
+.vinyl-share:hover{ background:rgba(255,215,0,0.25); }
+.vinyl-share:active{ transform:scale(0.88); }
+.vinyl-disc{
+  width:78px; height:78px; border-radius:50%;
+  background:
+    repeating-radial-gradient(circle at center,
+      var(--gold24-dark) 0px, var(--gold24-dark) 2px,
+      var(--gold24-mid) 3px, var(--gold24-mid) 5px),
+    conic-gradient(from 0deg, var(--gold24-bright), var(--gold24-dark), var(--gold24-mid), var(--gold24-bright));
+  background-blend-mode:overlay;
+  box-shadow:0 0 0 3px rgba(255,215,0,0.3), 0 0 14px rgba(255,215,0,0.2), 0 6px 16px rgba(0,0,0,0.5);
+  position:relative;
+  animation:spin 10s linear infinite;
+  transition:box-shadow .3s ease, transform .2s ease;
+}
+.vinyl-disc::after{
+  content:"";
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:26px; height:26px; border-radius:50%;
+  background:radial-gradient(circle, var(--gold24-shine) 0%, var(--gold24-mid) 85%);
+  box-shadow:0 0 8px rgba(255,215,0,0.4);
+}
+.vinyl-disc::before{
+  content:"";
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:6px; height:6px; border-radius:50%;
+  background:var(--deep); border:1.5px solid var(--gold24-shine);
+  z-index:2;
+}
+.vinyl-mini:active .vinyl-disc{ transform:scale(0.94); }
+.vinyl-disc.spinning{
+  animation-duration:2.3s;
+  box-shadow:0 0 0 3px rgba(255,242,194,0.65), 0 0 22px rgba(255,215,0,0.4), 0 6px 16px rgba(0,0,0,0.5);
+}
+.vinyl-num{
+  position:absolute; top:-4px; right:-4px;
+  width:18px; height:18px; border-radius:50%;
+  background:var(--deep); border:1px solid rgba(255,215,0,0.5);
+  font-size:9px; display:flex; align-items:center; justify-content:center;
+  color:var(--gold3); z-index:3;
+}
+.vinyl-name{ font-size:10.5px; text-align:center; line-height:1.3; color:rgba(255,255,255,0.7); max-width:82px; }
+.vinyl-mini.active .vinyl-name{ color:var(--gold3); font-weight:700; }
+
+.tap-overlay{
+  position:fixed; inset:0; background:rgba(255,255,255,0.06); backdrop-filter:blur(16px) saturate(140%); -webkit-backdrop-filter:blur(16px) saturate(140%);
+  display:flex; align-items:center; justify-content:center; z-index:50;
+  flex-direction:column; gap:16px; text-align:center; padding:20px;
+}
+.tap-overlay .logo2{ font-size:38px; font-weight:900; background:linear-gradient(90deg, var(--gold), var(--gold3)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.tap-btn{
+  padding:14px 34px; border-radius:40px; border:none;
+  background:linear-gradient(135deg, var(--gold), var(--gold2)); color:var(--deep);
+  font-weight:900; font-size:16px; cursor:pointer; box-shadow:0 0 40px rgba(255,215,0,0.4);
+  font-family:'Tajawal',sans-serif;
+}
+
+.footer-note{ text-align:center; font-size:11px; color:rgba(255,255,255,0.35); margin-top:16px; }
+
+/* ===== BALADEUR — couvercle vidéo qui se ferme sur la lecture + vinyles ===== */
+.lower-section{ position:relative; perspective:1200px; }
+.video-takeover{
+  position:absolute; inset:0; z-index:20;
+  display:none; flex-direction:column; align-items:center; justify-content:center;
+  border-radius:16px; overflow:hidden; cursor:pointer;
+  transform-origin:top center;
+  box-shadow:0 10px 40px rgba(0,0,0,0.65), inset 0 0 0 1px rgba(255,215,0,0.4);
+}
+.video-takeover video{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  filter:brightness(0.6) saturate(1.15);
+}
+.video-takeover::before{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.6) 100%);
+}
+.vt-content{ position:relative; z-index:1; text-align:center; padding:20px; }
+.vt-label{ font-size:11px; letter-spacing:2px; color:var(--gold3); opacity:.85; }
+.vt-title{ font-size:20px; font-weight:900; color:#fff; margin-top:8px; text-shadow:0 0 14px rgba(0,0,0,0.85); }
+.vt-hint{ font-size:12px; color:rgba(255,255,255,0.65); margin-top:14px; }
+
+.video-takeover.opening{ display:flex; animation:doorClose .65s cubic-bezier(.2,.9,.25,1) forwards; }
+.video-takeover.closing{ display:flex; animation:doorEject .6s cubic-bezier(.55,0,.85,.35) forwards; }
+
+/* le couvercle se referme par le haut, comme la porte d'un baladeur */
+@keyframes doorClose{
+  from{ transform:translateY(-100%) rotateX(75deg); opacity:0; }
+  to{ transform:translateY(0) rotateX(0deg); opacity:1; }
+}
+/* il s'ouvre puis sort/éjecte, comme la cassette d'un vieux baladeur */
+@keyframes doorEject{
+  from{ transform:translateY(0) rotateX(0deg); opacity:1; }
+  to{ transform:translateY(-55%) rotateX(-115deg) scale(.94); opacity:0; }
+}
+</style>
+</head>
+<body>
+
+<video id="bgVideo" autoplay muted loop playsinline>
+  <source src="bg.mp4" type="video/mp4">
+</video>
+
+<div class="tap-overlay" id="tapOverlay">
+  <div class="logo2">راديو SUDO</div>
+  <div class="verse" style="font-size:13px;">بث إذاعي متواصل 24/24 — اضغط للانطلاق</div>
+  <button class="tap-btn" id="tapStart">▶ ابدأ البث</button>
+</div>
+
+<div class="card">
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
+  <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+  <div class="verse">وَقُل رَّبِّ زِدْنِي عِلْمًا — سورة طه، آية 114</div>
+
+  <div class="shimmer"></div>
+
+  <div class="header">
+    <div class="logo">راديو SUDO</div>
+    <div class="tagline">RADIO SUDO — البث الحصري لِـ كيدة</div>
+    <div class="live-badge"><span class="dot"></span> بث مباشر 24/24</div>
+  </div>
+
+  <!-- أوقات الصلاة -->
+  <div class="prayer-card" id="prayerCard">
+    <div class="prayer-top">
+      <span id="hijriDate" class="hijri-date">—</span>
+      <span id="cityLabel">تونس</span>
+    </div>
+    <div class="next-prayer-banner" id="nextPrayerBanner">جارٍ تحميل أوقات الصلاة…</div>
+    <div class="prayer-row" id="prayerRow"></div>
+  </div>
+
+  <!-- تورن-ديسك رئيسي -->
+  <div class="turntable-zone">
+    <video class="turntable-bg-video" autoplay muted loop playsinline>
+      <source src="vinyle-tourne.mp4" type="video/mp4">
+    </video>
+    <div class="turntable-wrap">
+      <div class="tonearm-pivot"></div>
+      <div class="tonearm-arm" id="tonearm"></div>
+      <div class="platter" id="platter">
+        <div class="platter-label" id="platterLabel">—</div>
+        <div class="platter-hole"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lower-section" id="lowerSection">
+
+    <div class="video-takeover" id="videoTakeover">
+      <video id="vtVideo" muted loop playsinline>
+        <source src="vinyle-live.mp4" type="video/mp4">
+      </video>
+      <div class="vt-content">
+        <div class="vt-label">يُذاع الآن</div>
+        <div class="vt-title" id="vtTitle">—</div>
+        <div class="vt-hint">المس للعودة إلى الاسطوانات</div>
+      </div>
+    </div>
+
+    <div class="now-playing">
+      <div class="np-label">يُذاع الآن</div>
+      <div class="np-title" id="npTitle">—</div>
+      <div class="np-index" id="npIndex">—</div>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="times">
+        <span id="curTime">0:00</span>
+        <span id="durTime">0:00</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-sm" id="prevBtn" title="السابق">⏮</button>
+      <button class="btn btn-play" id="playBtn" title="تشغيل/إيقاف">▶</button>
+      <button class="btn btn-sm" id="nextBtn" title="التالي">⏭</button>
+      <button class="btn btn-sm" id="shuffleBtn" title="عشوائي">🔀</button>
+      <button class="btn btn-sm" id="shareBtn" title="نسخ رابط هذا المقطع">🔗</button>
+    </div>
+
+    <div class="vol-row">
+      <span>🔊</span>
+      <input type="range" id="volSlider" min="0" max="100" value="80">
+    </div>
+
+    <div class="shelf-label">رفّ الاسطوانات — المس واحدة لتدور</div>
+    <div class="vinyl-grid" id="vinylGrid"></div>
+
+  </div>
+
+  <div class="shimmer"></div>
+  <div class="footer-note">راديو SUDO — يبث بلا توقف، 24 ساعة على 24 · kieda.online</div>
+</div>
+
+<audio id="player" preload="auto"></audio>
+
+<script>
+// ==== قائمة البث — راديو SUDO ====
+const PLAYLIST = [
+  { title: "أبطال يوم بيوم", sub:"Héros du Quotidien", src: "audio/heros-du-quotidien-1.mp3" },
+  { title: "أبطال يوم بيوم (2)", sub:"Héros du Quotidien", src: "audio/heros-du-quotidien-2.mp3" },
+  { title: "إرث الأحياء", sub:"L'Héritage des Cités", src: "audio/heritage-des-cites-1.mp3" },
+  { title: "إرث الأحياء (2)", sub:"L'Héritage des Cités", src: "audio/heritage-des-cites-2.mp3" },
+  { title: "الجمهورية، مش وحدة", sub:"La République, pas une", src: "audio/la-republique-pas-une-1.mp3" },
+  { title: "الجمهورية، مش وحدة (2)", sub:"La République, pas une", src: "audio/la-republique-pas-une-2.mp3" },
+  { title: "الشوريكن ما يخطاش", sub:"Le Shuriken Ne Manque Jamais", src: "audio/le-shuriken-ne-manque-jamais-1.mp3" },
+  { title: "الشوريكن ما يخطاش (2)", sub:"Le Shuriken Ne Manque Jamais", src: "audio/le-shuriken-ne-manque-jamais-2.mp3" },
+  { title: "أثقل من السلاسل", sub:"Plus lourds que des chaînes", src: "audio/plus-lourds-que-des-chaines-1.mp3" },
+  { title: "أثقل من السلاسل (2)", sub:"Plus lourds que des chaînes", src: "audio/plus-lourds-que-des-chaines-2.mp3" },
+  { title: "احترم الأسامي", sub:"Respecte les prénoms", src: "audio/respecte-les-prenoms-1.mp3" },
+  { title: "احترم الأسامي (2)", sub:"Respecte les prénoms", src: "audio/respecte-les-prenoms-2.mp3" },
+  { title: "قبانية فوق القضبان", sub:"Kobbanya sur les rails", src: "audio/kobbanya-sur-les-rails-1.mp3" },
+  { title: "قبانية فوق القضبان (2)", sub:"Kobbanya sur les rails", src: "audio/kobbanya-sur-les-rails-2.mp3" },
+  { title: "قبانية فوق القضبان (3)", sub:"Kobbanya sur les rails", src: "audio/kobbanya-sur-les-rails-3.mp3" },
+  { title: "احمي راسك", sub:"Protège ta tête", src: "audio/protege-ta-tete-1.mp3" },
+  { title: "احمي راسك (2)", sub:"Protège ta tête", src: "audio/protege-ta-tete-2.mp3" },
+  { title: "نفس الدم، نفس النضال", sub:"Même Sang, Même Combat", src: "audio/meme-sang-meme-combat-1.mp3" },
+  { title: "نفس الدم، نفس النضال (2)", sub:"Même Sang, Même Combat", src: "audio/meme-sang-meme-combat-2.mp3" },
+  { title: "دم بندالة", sub:"Le Sang de Bandala", src: "audio/le-sang-de-bandala-1.mp3" },
+  { title: "دم بندالة (2)", sub:"Le Sang de Bandala", src: "audio/le-sang-de-bandala-2.mp3" },
+  { title: "بيريه أزرق", sub:"Béret Bleu", src: "audio/beret-bleu-1.mp3" },
+  { title: "بيريه أزرق (2)", sub:"Béret Bleu", src: "audio/beret-bleu-2.mp3" },
+  { title: "دم نديم", sub:"Le Sang de Nadim", src: "audio/le-sang-de-nadim-1.mp3" },
+  { title: "دم نديم (2)", sub:"Le Sang de Nadim", src: "audio/le-sang-de-nadim-2.mp3" },
+  { title: "من أجل ابن عم زياد", sub:"Pour le Cousin de Zyed", src: "audio/pour-le-cousin-de-zyed-1.mp3" },
+  { title: "من أجل ابن عم زياد (2)", sub:"Pour le Cousin de Zyed", src: "audio/pour-le-cousin-de-zyed-2.mp3" },
+  { title: "العودة للبلاد", sub:"Rentrée au Bled", src: "audio/rentree-au-bled-1.mp3" },
+  { title: "العودة للبلاد (2)", sub:"Rentrée au Bled", src: "audio/rentree-au-bled-2.mp3" },
+  { title: "سودو دائما واقف", sub:"Sudo Toujours Debout", src: "audio/sudo-toujours-debout-1.mp3" },
+  { title: "سودو دائما واقف (2)", sub:"Sudo Toujours Debout", src: "audio/sudo-toujours-debout-2.mp3" },
+  { title: "سودو ضد نيرو", sub:"Sudo vs Nirou", src: "audio/sudo-vs-nirou-1.mp3" },
+  { title: "سودو ضد نيرو (2)", sub:"Sudo vs Nirou", src: "audio/sudo-vs-nirou-2.mp3" },
+  { title: "607 السوداء (2)", sub:"La 607 Noire", src: "audio/La 607 Noire (2).mp3" },
+  { title: "607 السوداء (3)", sub:"La 607 Noire", src: "audio/La 607 Noire (3).mp3" },
+  { title: "مئتين في العداد (2)", sub:"Deux cents au compteur", src: "audio/Deux cents au compteur (2).mp3" },
+  { title: "مئتين في العداد (3)", sub:"Deux cents au compteur", src: "audio/Deux cents au compteur (3).mp3" },
+  { title: "باب الجديد، أحمر وأبيض (4)", sub:"Bab Jédid, Rouge et Blanc", src: "audio/Bab Jédid, Rouge et Blanc (4).mp3" },
+  { title: "باب الجديد، أحمر وأبيض (5)", sub:"Bab Jédid, Rouge et Blanc", src: "audio/Bab Jédid, Rouge et Blanc (5).mp3" },
+  { title: "نهاية النكتة في كالبسو (2)", sub:"Fin de la blague au Calypso", src: "audio/Fin de la blague au Calypso (2).mp3" },
+  { title: "نهاية النكتة في كالبسو (3)", sub:"Fin de la blague au Calypso", src: "audio/Fin de la blague au Calypso (3).mp3" },
+  { title: "نهاية النكتة في كالبسو (4)", sub:"Fin de la blague au Calypso", src: "audio/Fin de la blague au Calypso (4).mp3" },
+  { title: "إعصار التسعة أمتار (2)", sub:"Hurricane de Neuf Mètres", src: "audio/Hurricane de Neuf Mètres (2).mp3" },
+  { title: "إعصار التسعة أمتار (3)", sub:"Hurricane de Neuf Mètres", src: "audio/Hurricane de Neuf Mètres (3).mp3" },
+  { title: "ولد البلاد (2)", sub:"L'Enfant du Bled", src: "audio/L'Enfant du Bled (2).mp3" },
+  { title: "ولد البلاد (3)", sub:"L'Enfant du Bled", src: "audio/L'Enfant du Bled (3).mp3" },
+  { title: "جامعة الشارع (2)", sub:"L'Université de la Rue", src: "audio/L'Université de la Rue (2).mp3" },
+  { title: "جامعة الشارع (3)", sub:"L'Université de la Rue", src: "audio/L'Université de la Rue (3).mp3" },
+  { title: "بلا عنوان (2)", sub:"Sans Titre", src: "audio/Sans Titre (2).mp3" },
+  { title: "بلا عنوان (3)", sub:"Sans Titre", src: "audio/Sans Titre (3).mp3" },
+  { title: "93 في الدم", sub:"93 Dans Le Sang", src: "audio/93 Dans Le Sang.mp3" },
+  { title: "93 في الدم (2)", sub:"93 Dans Le Sang", src: "audio/93 Dans Le Sang (1).mp3" },
+  { title: "القط جندي", sub:"Un chat, c'est un soldat", src: "audio/Un chat, c'est un soldat.mp3" },
+  { title: "القط جندي (2)", sub:"Un chat, c'est un soldat", src: "audio/Un chat, c'est un soldat (1).mp3" },
+  { title: "غابة الباطون", sub:"Jungle de béton", src: "audio/Jungle de béton.mp3" },
+  { title: "غابة الباطون (2)", sub:"Jungle de béton", src: "audio/Jungle de béton (1).mp3" },
+  { title: "المعلّم الكبير", sub:"Le Grand Maître", src: "audio/Le Grand Maître.mp3" },
+  { title: "المعلّم الكبير (2)", sub:"Le Grand Maître", src: "audio/Le Grand Maître (1).mp3" },
+  { title: "قابي خويا", sub:"Gabi C'est Mon Frère", src: "audio/Gabi C'est Mon Frère.mp3" },
+  { title: "قابي خويا (2)", sub:"Gabi C'est Mon Frère", src: "audio/Gabi C'est Mon Frère (1).mp3" },
+  { title: "سراب الـ156", sub:"Le Mirage du 156", src: "audio/Le Mirage du 156.mp3" },
+  { title: "سراب الـ156 (2)", sub:"Le Mirage du 156", src: "audio/Le Mirage du 156 (1).mp3" },
+  { title: "الحق في غض النظر", sub:"Le droit de détourner les yeux", src: "audio/Le droit de détourner les yeux.mp3" },
+  { title: "الحق في غض النظر (2)", sub:"Le droit de détourner les yeux", src: "audio/Le droit de détourner les yeux (1).mp3" },
+  { title: "وزن الحديد", sub:"Le Poids du Métal", src: "audio/Le Poids du Métal.mp3" },
+  { title: "وزن الحديد (2)", sub:"Le Poids du Métal", src: "audio/Le Poids du Métal (1).mp3" },
+  { title: "المجد والحجر", sub:"La Gloire et la Pierre", src: "audio/La Gloire et la Pierre.mp3" },
+  { title: "المجد والحجر (2)", sub:"La Gloire et la Pierre", src: "audio/La Gloire et la Pierre (1).mp3" },
+];
+
+const player = document.getElementById('player');
+const playBtn = document.getElementById('playBtn');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const shuffleBtn = document.getElementById('shuffleBtn');
+const shareBtn = document.getElementById('shareBtn');
+const npTitle = document.getElementById('npTitle');
+const npIndex = document.getElementById('npIndex');
+const progressBar = document.getElementById('progressBar');
+const progressWrap = document.getElementById('progressWrap');
+const curTime = document.getElementById('curTime');
+const durTime = document.getElementById('durTime');
+const volSlider = document.getElementById('volSlider');
+const vinylGrid = document.getElementById('vinylGrid');
+const tapOverlay = document.getElementById('tapOverlay');
+const tapStart = document.getElementById('tapStart');
+const platter = document.getElementById('platter');
+const platterLabel = document.getElementById('platterLabel');
+const tonearm = document.getElementById('tonearm');
+const videoTakeover = document.getElementById('videoTakeover');
+const vtVideo = document.getElementById('vtVideo');
+const vtTitle = document.getElementById('vtTitle');
+
+let currentIndex = 0;
+let playHistory = []; // pile des pistes précédemment jouées, pour le bouton "précédent"
+
+// ==== روابط مباشرة لمقطع محدد (partage d'un lien vers une chanson précise) ====
+function slugify(s){
+  return s.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+const TRACK_SLUGS = PLAYLIST.map(t => slugify(t.sub) || 'piste');
+
+function getDeepLinkIndex(){
+  const params = new URLSearchParams(location.search);
+  const slug = params.get('t');
+  if(slug){
+    const idx = TRACK_SLUGS.indexOf(slug);
+    if(idx !== -1) return idx;
+  }
+  return null;
+}
+const deepLinkIndex = getDeepLinkIndex();
+
+function buildShareLink(index){
+  const url = new URL(location.href);
+  url.search = '';
+  url.searchParams.set('t', TRACK_SLUGS[index]);
+  return url.toString();
+}
+
+async function copyTrackLink(index){
+  const link = buildShareLink(index);
+  try{
+    await navigator.clipboard.writeText(link);
+    return true;
+  }catch(e){
+    window.prompt('انسخ الرابط يدويًا:', link);
+    return false;
+  }
+}
+
+function randomIndexExcluding(exclude){
+  if(PLAYLIST.length <= 1) return 0;
+  let idx;
+  do{ idx = Math.floor(Math.random() * PLAYLIST.length); } while(idx === exclude);
+  return idx;
+}
+
+function fmt(s){
+  if(!isFinite(s)) return "0:00";
+  const m = Math.floor(s/60);
+  const sec = Math.floor(s%60).toString().padStart(2,'0');
+  return `${m}:${sec}`;
+}
+
+function renderGrid(){
+  vinylGrid.innerHTML = '';
+  PLAYLIST.forEach((t, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'vinyl-mini' + (i === currentIndex ? ' active' : '');
+    wrap.innerHTML = `
+      <div style="position:relative;">
+        <div class="vinyl-num">${i+1}</div>
+        <div class="vinyl-disc${i === currentIndex && !player.paused ? ' spinning' : ''}"></div>
+        <div class="vinyl-share" title="نسخ رابط هذا المقطع">🔗</div>
+      </div>
+      <div class="vinyl-name">${t.title}</div>
+    `;
+    wrap.onclick = () => { loadTrack(i, true); };
+    const shareIcon = wrap.querySelector('.vinyl-share');
+    shareIcon.onclick = async (e) => {
+      e.stopPropagation();
+      const ok = await copyTrackLink(i);
+      shareIcon.textContent = ok ? '✅' : '🔗';
+      if(ok) setTimeout(() => { shareIcon.textContent = '🔗'; }, 1400);
+    };
+    vinylGrid.appendChild(wrap);
+  });
+}
+
+function setSpinning(spinning){
+  platter.classList.toggle('spinning', spinning);
+  tonearm.classList.toggle('playing', spinning);
+}
+
+let vtOpen = false;
+function openVideoTakeover(){
+  if(vtOpen) return;
+  vtOpen = true;
+  videoTakeover.classList.remove('closing');
+  videoTakeover.classList.add('opening');
+  vtVideo.currentTime = 0;
+  vtVideo.play().catch(()=>{});
+}
+function closeVideoTakeover(){
+  if(!vtOpen) return;
+  vtOpen = false;
+  videoTakeover.classList.remove('opening');
+  videoTakeover.classList.add('closing');
+  setTimeout(() => {
+    videoTakeover.classList.remove('closing');
+  }, 620);
+}
+videoTakeover.onclick = closeVideoTakeover;
+
+function loadTrack(index, autoplay){
+  currentIndex = index;
+  const t = PLAYLIST[index];
+  player.src = t.src;
+  npTitle.textContent = `${t.title} — ${t.sub}`;
+  npIndex.textContent = `المقطع ${index+1} من ${PLAYLIST.length}`;
+  platterLabel.textContent = 'SUDO';
+  vtTitle.textContent = `${t.title} — ${t.sub}`;
+  renderGrid();
+  try{
+    const url = new URL(location.href);
+    url.searchParams.set('t', TRACK_SLUGS[index]);
+    history.replaceState(null, '', url.toString());
+  }catch(e){}
+  if(autoplay){
+    player.play().catch(()=>{});
+  }
+}
+
+function playNext(){
+  playHistory.push(currentIndex);
+  loadTrack(randomIndexExcluding(currentIndex), true);
+}
+function playPrev(){
+  if(playHistory.length){
+    loadTrack(playHistory.pop(), true);
+  } else {
+    loadTrack(randomIndexExcluding(currentIndex), true);
+  }
+}
+
+playBtn.onclick = () => {
+  if(player.paused){ player.play(); } else { player.pause(); }
+};
+
+player.onplay = () => { playBtn.textContent = '⏸'; setSpinning(true); renderGrid(); openVideoTakeover(); };
+player.onpause = () => { playBtn.textContent = '▶'; setSpinning(false); renderGrid(); };
+player.onended = () => { closeVideoTakeover(); playNext(); };
+
+nextBtn.onclick = playNext;
+prevBtn.onclick = playPrev;
+
+// la lecture est toujours aléatoire — plus de mode "successif"
+shuffleBtn.style.background = 'rgba(255,215,0,0.35)';
+shuffleBtn.title = 'قراءة عشوائية دائمة';
+shuffleBtn.onclick = () => {
+  shuffleBtn.style.transform = 'scale(0.9)';
+  setTimeout(() => { shuffleBtn.style.transform = ''; }, 150);
+};
+
+player.ontimeupdate = () => {
+  if(player.duration){
+    progressBar.style.width = (player.currentTime / player.duration * 100) + '%';
+    curTime.textContent = fmt(player.currentTime);
+    durTime.textContent = fmt(player.duration);
+  }
+};
+
+progressWrap.onclick = (e) => {
+  const rect = progressWrap.getBoundingClientRect();
+  const ratio = (e.clientX - rect.left) / rect.width;
+  if(player.duration){ player.currentTime = ratio * player.duration; }
+};
+
+volSlider.oninput = () => { player.volume = volSlider.value / 100; };
+player.volume = 0.8;
+
+tapStart.onclick = () => {
+  tapOverlay.style.display = 'none';
+  const startIndex = deepLinkIndex !== null ? deepLinkIndex : randomIndexExcluding(-1);
+  loadTrack(startIndex, true);
+};
+
+shareBtn.onclick = async () => {
+  const ok = await copyTrackLink(currentIndex);
+  shareBtn.textContent = ok ? '✅' : '🔗';
+  if(ok) setTimeout(() => { shareBtn.textContent = '🔗'; }, 1400);
+};
+
+// init avant premier lancement
+renderGrid();
+npTitle.textContent = `${PLAYLIST[0].title} — ${PLAYLIST[0].sub}`;
+npIndex.textContent = `المقطع 1 من ${PLAYLIST.length}`;
+platterLabel.textContent = 'SUDO';
+
+// ==== أوقات الصلاة ====
+const PRAYER_ORDER = [
+  { key:"Fajr",    name:"الفجر" },
+  { key:"Dhuhr",   name:"الظهر" },
+  { key:"Asr",     name:"العصر" },
+  { key:"Maghrib", name:"المغرب" },
+  { key:"Isha",    name:"العشاء" },
+];
+const TUNIS_FALLBACK = { lat: 36.8065, lng: 10.1815, label: "تونس" };
+let prayerTimings = null;
+let hijriLabel = "";
+
+function toMinutes(hhmm){
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function renderPrayers(){
+  if(!prayerTimings) return;
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  let nextIdx = PRAYER_ORDER.findIndex(p => toMinutes(prayerTimings[p.key]) > nowMin);
+  if(nextIdx === -1) nextIdx = 0; // بعد العشاء → القادمة فجر الغد
+
+  document.getElementById('hijriDate').textContent = hijriLabel;
+
+  const row = document.getElementById('prayerRow');
+  row.innerHTML = '';
+  PRAYER_ORDER.forEach((p, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'prayer-cell' + (i === nextIdx ? ' next' : '');
+    cell.innerHTML = `<div class="p-name">${p.name}</div><div class="p-time">${prayerTimings[p.key]}</div>`;
+    row.appendChild(cell);
+  });
+
+  const next = PRAYER_ORDER[nextIdx];
+  let diff = toMinutes(prayerTimings[next.key]) - nowMin;
+  if(diff < 0) diff += 24 * 60;
+  const hLeft = Math.floor(diff / 60);
+  const mLeft = diff % 60;
+  document.getElementById('nextPrayerBanner').innerHTML =
+    `صلاة <b>${next.name}</b> بعد <b>${hLeft > 0 ? hLeft + ' س ' : ''}${mLeft} د</b> — الساعة ${prayerTimings[next.key]}`;
+}
+
+async function fetchPrayerTimes(lat, lng, label){
+  try{
+    const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=18`);
+    const data = await res.json();
+    const t = data.data.timings;
+    prayerTimings = {
+      Fajr: t.Fajr.slice(0,5),
+      Dhuhr: t.Dhuhr.slice(0,5),
+      Asr: t.Asr.slice(0,5),
+      Maghrib: t.Maghrib.slice(0,5),
+      Isha: t.Isha.slice(0,5),
+    };
+    const h = data.data.date.hijri;
+    hijriLabel = `${h.day} ${h.month.ar} ${h.year} هـ`;
+    document.getElementById('cityLabel').textContent = label;
+    renderPrayers();
+  }catch(e){
+    document.getElementById('nextPrayerBanner').textContent = "تعذّر تحميل أوقات الصلاة";
+  }
+}
+
+function initPrayerTimes(){
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      (pos) => fetchPrayerTimes(pos.coords.latitude, pos.coords.longitude, "موقعك الحالي"),
+      () => fetchPrayerTimes(TUNIS_FALLBACK.lat, TUNIS_FALLBACK.lng, TUNIS_FALLBACK.label),
+      { timeout: 6000 }
+    );
+  } else {
+    fetchPrayerTimes(TUNIS_FALLBACK.lat, TUNIS_FALLBACK.lng, TUNIS_FALLBACK.label);
+  }
+}
+
+initPrayerTimes();
+setInterval(renderPrayers, 60 * 1000);
+
+// ==== تسجيل Service Worker (PWA) ====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('SUDO PWA: service worker enregistré ✓'))
+      .catch((err) => console.error('SUDO PWA: échec service worker →', err));
+  });
+}
+
+</script>
+
+</body>
+</html>
