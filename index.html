@@ -950,6 +950,21 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+
+// ==== pilotage depuis Farhoum (postMessage, origine *.kieda.online) ====
+window.addEventListener('message',function(e){
+  var h=''; try{ h=new URL(e.origin).hostname; }catch(x){ return; }
+  if(!/(^|\.)kieda\.online$/.test(h)) return;
+  var d=e.data; if(!d||typeof d!=='object') return;
+  if(d.type==='idh-play'){
+    tapOverlay.style.display='none';
+    if(player.paused){ if(!player.src||player.src===location.href){ loadTrack(deepLinkIndex!==null?deepLinkIndex:randomIndexExcluding(-1), true); } else { player.play().catch(function(){}); } }
+  }
+  else if(d.type==='idh-pause'){ if(!player.paused) player.pause(); }
+  else if(d.type==='idh-next'){ playNext(); }
+  else return;
+  setTimeout(function(){ try{ e.source.postMessage({type:'idh-state',playing:!player.paused},e.origin); }catch(x){} },900);
+});
 </script>
 
 </body>
